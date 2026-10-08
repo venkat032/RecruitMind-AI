@@ -1,0 +1,33 @@
+# Runtime dependencies, pinned to the versions the test suite passes with.
+# Install: pip install -r requirements.txt
+
+# API
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic==2.10.4
+email-validator==2.2.0
+
+# Agents / orchestration
+langgraph==1.1.10
+langchain==1.2.18
+langchain-core==1.6.1
+langchain-openai==1.6.0
+langsmith==0.12.1
+
+# LangGraph checkpoints in PostgreSQL (keep langgraph-checkpoint on 3.x for langgraph 1.1)
+langgraph-checkpoint==3.0.1
+langgraph-checkpoint-postgres==3.0.5
+psycopg[binary,pool]==3.3.6
+psycopg-pool==3.3.3
+
+# Database
+psycopg2-binary==2.9.11
+sqlalchemy==2.0.48
+
+# Security
+argon2-cffi==23.1.0
+
+# Resume parsing / config
+pypdf==6.14.2
+python-dotenv==1.0.1
