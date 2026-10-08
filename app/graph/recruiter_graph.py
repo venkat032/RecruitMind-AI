@@ -8,6 +8,7 @@ from langgraph.graph import (
     END
 )
 
+import psycopg
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
@@ -120,8 +121,33 @@ builder.add_edge("email_agent", END)
 
 # Same connection settings as the rest of the app:
 # DATABASE_URL in production (Render), POSTGRES_* locally.
+CHECKPOINT_CONNINFO = database_conninfo()
+
+
+def _ensure_database_reachable(conninfo: str) -> None:
+    """
+    Try one direct connection before opening the pool. If PostgreSQL is
+    unreachable, the pool would only report a generic PoolTimeout after 30s;
+    this surfaces PostgreSQL's real reason (unknown host, wrong password,
+    database in another region...) within seconds. libpq error messages
+    never include the password.
+    """
+
+    try:
+        with psycopg.connect(conninfo, connect_timeout=10):
+            pass
+
+    except psycopg.OperationalError as e:
+        raise RuntimeError(
+            "Cannot connect to PostgreSQL for the LangGraph checkpointer. "
+            f"Check DATABASE_URL (or POSTGRES_*). PostgreSQL said: {e}"
+        ) from e
+
+
+_ensure_database_reachable(CHECKPOINT_CONNINFO)
+
 checkpoint_pool = ConnectionPool(
-    database_conninfo(),
+    CHECKPOINT_CONNINFO,
     min_size=1,
     max_size=10,
     # settings required by PostgresSaver
